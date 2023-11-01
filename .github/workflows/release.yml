@@ -139,6 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
     - uses: actions/checkout@v3
@@ -180,20 +181,45 @@ jobs:
         ls -al Formula/
         cat Formula/${{ matrix.product }}.rb
 
-    - name: Commit updated formula
-      uses: stefanzweifel/git-auto-commit-action@v5
+    - name: Create Pull Request
+      id: cpr
+      uses: peter-evans/create-pull-request@v5
       with:
-        commit_message: Update Homebrew formula to version ${{ env.REF }}    
-        branch: main    
-        # commit_options: '--no-verify --signoff'    
-        file_pattern: 'Formula/*.rb'    
-        repository: .
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: Update Homebrew formula version to ${{ env.REF }}
+        committer: GitHub <noreply@github.com>
+        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+        signoff: false
+        branch: releases/${{ env.REF }}
+        delete-branch: true
+        title: 'Update Homebrew formula version to ${{ env.REF }}'
+        body: |
+          Update Homebrew formula version to ${{ env.REF }}
+        labels: |
+          report
+          automated pr
+        # assignees: peter-evans
+        # reviewers: peter-evans
+        # team-reviewers: |
+        #   developers
+        #   qa-team
+        milestone: 1
+        draft: false
+
+    # - name: Commit updated formula
+    #   uses: stefanzweifel/git-auto-commit-action@v5
+    #   with:
+    #     commit_message: Update Homebrew formula to version ${{ env.REF }}    
+    #     branch: main    
+    #     # commit_options: '--no-verify --signoff'    
+    #     file_pattern: 'Formula/*.rb'    
+    #     repository: .
     
-        commit_user_name: GitHub Actions
-        commit_user_email: github@spartascience.com
+    #     commit_user_name: GitHub Actions
+    #     commit_user_email: github@spartascience.com
     
-        skip_dirty_check: true    
+    #     skip_dirty_check: true    
         
-        # Optional. Prevents the shell from expanding filenames. 
-        # Details: https://www.gnu.org/software/bash/manual/html_node/Filename-Expansion.html
-        # disable_globbing: true
+    #     # Optional. Prevents the shell from expanding filenames. 
+    #     # Details: https://www.gnu.org/software/bash/manual/html_node/Filename-Expansion.html
+    #     # disable_globbing: true
