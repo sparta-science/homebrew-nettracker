@@ -197,13 +197,12 @@ jobs:
         body: |
           Update Homebrew formula version to ${{ env.REF }}
         labels: |
-          report
-          automated pr
+          homebrew
+          formula
         add-paths: |
           Formula/*.rb
         # assignees: peter-evans
         # reviewers: peter-evans
         # team-reviewers: |
         #   developers
-        #   qa-team
         draft: false
