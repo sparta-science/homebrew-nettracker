@@ -190,6 +190,7 @@ jobs:
         committer: GitHub <noreply@github.com>
         author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
         signoff: false
+        base: main
         branch: releases/${{ env.REF }}
         delete-branch: true
         title: 'Update Homebrew formula version to ${{ env.REF }}'
