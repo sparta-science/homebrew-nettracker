@@ -49,4 +49,10 @@ formula=$(echo "${formula}" | sed 's/{license}/'${LICENSE}'/g')
 formula=$(echo "${formula}" | sed 's/{arm64_sha}/'${arm64_sha}'/g')
 formula=$(echo "${formula}" | sed 's/{amd64_sha}/'${amd64_sha}'/g')
 
+echo "----------------------------------"
+echo "${formula}"
+echo "----------------------------------"
+echo "Will create file Formula/${APP}.rb"
+echo "----------------------------------"
+
 echo "${formula}" > Formula/${APP}.rb
