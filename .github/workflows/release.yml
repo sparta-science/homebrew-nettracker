@@ -169,6 +169,10 @@ jobs:
         echo "ARM_SHA256=$(cat ${{ env.ASSET_NAME }}-arm64.sha256)" >> $GITHUB_ENV
         echo "AMD_SHA256=$(cat ${{ env.ASSET_NAME }}-amd64.sha256)" >> $GITHUB_ENV
         version=$(echo ${{ env.REF }} | sed 's/v//g')
+
+        echo "arm64 sha256: ${ARM_SHA256}"
+        echo "amd64 sha256: ${AMD_SHA256}"
+        echo "version: ${version}"
         bash ./update_formula.sh $version $ARM_SHA256 $AMD_SHA256
         cat Formula/${{ matrix.product }}.rb
 
