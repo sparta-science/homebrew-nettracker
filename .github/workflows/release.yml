@@ -127,7 +127,7 @@ jobs:
         asset_name: ${{ env.ASSET_NAME }}.sha256
         asset_content_type: text/plain
 
-update_formula:
+  update_formula:
     needs:
       - build
       - create_release
