@@ -1,0 +1,191 @@
+name: ci
+
+on:
+  workflow_dispatch:
+  push:
+    tags: [ "v[0-9]+.[0-9]+.[0-9]+" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        arch: [ amd64, arm64 ]
+        os: [ darwin ]
+        product: [ nettracker ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Standardize HEAD Reference
+      id: head_ref
+      run: |
+        echo "REF=${{ github.event.pull_request && github.head_ref || github.ref_name }}" >> $GITHUB_ENV
+
+    - name: Define asset name
+      id: asset_name
+      run: |
+        echo "ASSET_NAME=${{ matrix.product }}-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_ENV
+  
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.20'
+
+    - name: Build binary for ${{ matrix.arch }}
+      run: |
+        GOOS=darwin GOARCH=${{ matrix.arch }} go build -o ${{ env.ASSET_NAME }} -ldflags "-X main.versionNumber=${{ env.REF }}" ${{ matrix.product }}.go
+        sha256sum -b ${{ env.ASSET_NAME }} | awk '{ print $1; }' > ${{ env.ASSET_NAME }}.sha256
+
+    - name: Pass ${{ matrix.arch }} binary to release job
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.ASSET_NAME }}
+        path: ./${{ env.ASSET_NAME }}
+
+    - name: Pass ${{ matrix.arch }} SHA256 to release job
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.ASSET_NAME }}.sha256
+        path: ./${{ env.ASSET_NAME }}.sha256
+
+  create_release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Standardize HEAD Reference
+      id: head_ref
+      run: |
+        echo "REF=${{ github.event.pull_request && github.head_ref || github.ref_name }}" >> $GITHUB_ENV
+
+    - name: Create release
+      uses: actions/create-release@v1
+      id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        draft: false
+        prerelease: false
+        release_name: Release ${{ env.REF }}
+        tag_name: ${{ github.ref }}
+        body_path: CHANGELOG.md
+
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+
+  release_artifacts:
+    needs:
+      - build
+      - create_release
+    strategy:
+      matrix:
+        arch: [ amd64, arm64 ]
+        os: [ darwin ]
+        product: [ nettracker ]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Define asset name
+      id: asset_name
+      run: |
+        echo "ASSET_NAME=${{ matrix.product }}-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_ENV
+
+    - name: Download ${{ matrix.arch }} binary
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.ASSET_NAME }}
+        path: ./
+
+    - name: Download ${{ matrix.arch }} SHA256 hash
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.ASSET_NAME }}.sha256
+        path: ./
+
+    - name: List files
+      run: |
+        ls -l
+
+    - name: Upload ${{ matrix.arch }} artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        asset_path: ./${{ env.ASSET_NAME }}
+        asset_name: ${{ env.ASSET_NAME }}
+        asset_content_type: application/octet-stream
+
+    - name: Upload ${{ matrix.arch }} artifact SHA256 hash
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create_release.outputs.upload_url }}
+        asset_path: ./${{ env.ASSET_NAME }}.sha256
+        asset_name: ${{ env.ASSET_NAME }}.sha256
+        asset_content_type: text/plain
+
+update_formula:
+    needs:
+      - build
+      - create_release
+      - release_artifacts
+    strategy:
+      matrix:
+        arch: [ amd64, arm64 ]
+        os: [ darwin ]
+        product: [ nettracker ]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Define asset name
+      id: asset_name
+      run: |
+        echo "ASSET_NAME=${{ matrix.product }}-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_ENV
+
+    - name: Standardize HEAD Reference
+      id: head_ref
+      run: |
+        echo "REF=${{ github.event.pull_request && github.head_ref || github.ref_name }}" >> $GITHUB_ENV
+  
+    - name: Download ${{ matrix.arch }} binary
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.ASSET_NAME }}
+        path: ./
+
+    - name: Download ${{ matrix.arch }} SHA256 hash
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.ASSET_NAME }}.sha256
+        path: ./
+
+    - name: List files
+      run: |
+        ls -l
+
+    - name: Update formula file
+      run: |
+        bash ./update_formula.sh
+        cat Formula/${{ matrix.product }}.rb
+
+    - name: Commit updated formula
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: Update Homebrew formula to version ${{ env.REF }}    
+        branch: main    
+        commit_options: '--no-verify --signoff'    
+        file_pattern: 'Formula/*.rb'    
+        repository: .
+    
+        # Optional commit user and author settings
+        commit_user_name: GitHub Actions # defaults to "github-actions[bot]"
+        commit_user_email: github@spartascience.com # defaults to "41898282+github-actions[bot]@users.noreply.github.com"
+    
+        skip_dirty_check: true    
+        
+        # Optional. Prevents the shell from expanding filenames. 
+        # Details: https://www.gnu.org/software/bash/manual/html_node/Filename-Expansion.html
+        # disable_globbing: true
