@@ -166,20 +166,15 @@ jobs:
 
     - name: Update formula file
       run: |
-        cat ./${{ env.ASSET_NAME }}-arm64.sha256
         arm_sha=$(cat ./${{ env.ASSET_NAME }}-arm64.sha256)
-
-        cat ${{ env.ASSET_NAME }}-amd64.sha256
         amd_sha=$(cat ./${{ env.ASSET_NAME }}-amd64.sha256)
-
-        echo "ARM_SHA256=${arm_sha}" >> $GITHUB_ENV
-        echo "AMD_SHA256=${amd_sha}" >> $GITHUB_ENV
         version=$(echo ${{ env.REF }} | sed 's/v//g')
 
-        echo "arm64 sha256: ${ARM_SHA256}"
-        echo "amd64 sha256: ${AMD_SHA256}"
+        echo "arm64 sha256: ${arm_sha}"
+        echo "amd64 sha256: ${amd_sha}" 
         echo "version: ${version}"
-        bash ./update_formula.sh $version $ARM_SHA256 $AMD_SHA256
+
+        bash ./update_formula.sh $version $arm_sha $amd_sha
         cat Formula/${{ matrix.product }}.rb
 
     - name: Commit updated formula
