@@ -134,7 +134,6 @@ jobs:
       - release_artifacts
     strategy:
       matrix:
-        arch: [ amd64, arm64 ]
         os: [ darwin ]
         product: [ nettracker ]
     runs-on: ubuntu-latest
@@ -145,24 +144,20 @@ jobs:
     - name: Define asset name
       id: asset_name
       run: |
-        echo "ASSET_NAME=${{ matrix.product }}-${{ matrix.os }}-${{ matrix.arch }}" >> $GITHUB_ENV
+        echo "ASSET_NAME=${{ matrix.product }}-${{ matrix.os }}" >> $GITHUB_ENV
 
     - name: Standardize HEAD Reference
       id: head_ref
       run: |
         echo "REF=${{ github.event.pull_request && github.head_ref || github.ref_name }}" >> $GITHUB_ENV
   
-    - name: Download ${{ matrix.arch }} binary
-      uses: actions/download-artifact@v3
+    - name: Download assets (SHA256 hashes)
+      uses: dsaltares/fetch-gh-release-asset@master
       with:
-        name: ${{ env.ASSET_NAME }}
-        path: ./
-
-    - name: Download ${{ matrix.arch }} SHA256 hash
-      uses: actions/download-artifact@v3
-      with:
-        name: ${{ env.ASSET_NAME }}.sha256
-        path: ./
+        version: 'tags/${{ env.REF }}'
+        regex: true
+        file: "${{ env.ASSET }}-.*\\.sha256"
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: List files
       run: |
@@ -170,7 +165,7 @@ jobs:
 
     - name: Update formula file
       run: |
-        bash ./update_formula.sh
+        bash ./update_formula.sh ${{ env.REF }} 
         cat Formula/${{ matrix.product }}.rb
 
     - name: Commit updated formula
