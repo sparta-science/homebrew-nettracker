@@ -166,7 +166,10 @@ jobs:
 
     - name: Update formula file
       run: |
-        bash ./update_formula.sh ${{ env.REF }} 
+        echo "ARM_SHA256=$(cat ${{ env.ASSET_NAME }}-arm64.sha256)" >> $GITHUB_ENV
+        echo "AMD_SHA256=$(cat ${{ env.ASSET_NAME }}-amd64.sha256)" >> $GITHUB_ENV
+        version=$(echo ${{ env.REF }} | sed 's/v//g')
+        bash ./update_formula.sh $version $ARM_SHA256 $AMD_SHA256
         cat Formula/${{ matrix.product }}.rb
 
     - name: Commit updated formula
@@ -174,13 +177,12 @@ jobs:
       with:
         commit_message: Update Homebrew formula to version ${{ env.REF }}    
         branch: main    
-        commit_options: '--no-verify --signoff'    
+        # commit_options: '--no-verify --signoff'    
         file_pattern: 'Formula/*.rb'    
         repository: .
     
-        # Optional commit user and author settings
-        commit_user_name: GitHub Actions # defaults to "github-actions[bot]"
-        commit_user_email: github@spartascience.com # defaults to "41898282+github-actions[bot]@users.noreply.github.com"
+        commit_user_name: GitHub Actions
+        commit_user_email: github@spartascience.com
     
         skip_dirty_check: true    
         

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 app_version=$1
-arm_sha=$2
+arm64_sha=$2
 amd64_sha=$3
 
 if [ -f .env ]; then
@@ -21,7 +21,7 @@ class {class} < Formula
 
   if Hardware::CPU.arm?
     url "{homepage}/releases/download/v#{version}/{app}-darwin-arm64"
-    sha256 "{arm_sha}"
+    sha256 "{arm64_sha}"
   else
     url "{homepage}/releases/download/v#{version}/{app}-darwin-amd64"
     sha256 "{amd64_sha}"
@@ -47,7 +47,7 @@ formula=$(echo "${formula}" | sed 's/{app}/'${APP}'/g')
 formula=$(echo "${formula}" | sed 's,{homepage},'${HOMEPAGE}',g')
 formula=$(echo "${formula}" | sed 's/{app_version}/'${app_version}'/g')
 formula=$(echo "${formula}" | sed 's/{license}/'${LICENSE}'/g')
-formula=$(echo "${formula}" | sed 's/{arm_sha}/'${arm_sha}'/g')
+formula=$(echo "${formula}" | sed 's/{arm64_sha}/'${arm64_sha}'/g')
 formula=$(echo "${formula}" | sed 's/{amd64_sha}/'${amd64_sha}'/g')
 
 echo "${formula}" > Formula/${APP}.rb
