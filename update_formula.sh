@@ -10,7 +10,6 @@ if [ -f .env ]; then
 fi
 
 class="$(tr '[:lower:]' '[:upper:]' <<< ${APP:0:1})${APP:1}"
-echo "${class}"
 
 read -r -d '' formula_tmpl <<'EOF'
 class {class} < Formula
@@ -37,7 +36,7 @@ class {class} < Formula
 end
 EOF
 
-if [ -z "$app_version" ] || [ -z "$arm_sha" ] || [ -z "$amd64_sha" ]; then
+if [ -z "$app_version" ] || [ -z "$arm64_sha" ] || [ -z "$amd64_sha" ]; then
   echo "Usage: update_formula.sh <app_version> <arm_sha> <amd64_sha>"
   exit 1
 fi
