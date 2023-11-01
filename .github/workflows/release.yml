@@ -174,7 +174,7 @@ jobs:
         echo "amd64 sha256: ${amd_sha}" 
         echo "version: ${version}"
 
-        bash ./update_formula.sh $version $arm_sha $amd_sha
+        echo bash ./update_formula.sh $version $arm_sha $amd_sha
         cat Formula/${{ matrix.product }}.rb
 
     - name: Commit updated formula
