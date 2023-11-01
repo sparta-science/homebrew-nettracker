@@ -199,28 +199,11 @@ jobs:
         labels: |
           report
           automated pr
+        add-paths: |
+          Formula/*.rb
         # assignees: peter-evans
         # reviewers: peter-evans
         # team-reviewers: |
         #   developers
         #   qa-team
-        milestone: 1
         draft: false
-
-    # - name: Commit updated formula
-    #   uses: stefanzweifel/git-auto-commit-action@v5
-    #   with:
-    #     commit_message: Update Homebrew formula to version ${{ env.REF }}    
-    #     branch: main    
-    #     # commit_options: '--no-verify --signoff'    
-    #     file_pattern: 'Formula/*.rb'    
-    #     repository: .
-    
-    #     commit_user_name: GitHub Actions
-    #     commit_user_email: github@spartascience.com
-    
-    #     skip_dirty_check: true    
-        
-    #     # Optional. Prevents the shell from expanding filenames. 
-    #     # Details: https://www.gnu.org/software/bash/manual/html_node/Filename-Expansion.html
-    #     # disable_globbing: true
