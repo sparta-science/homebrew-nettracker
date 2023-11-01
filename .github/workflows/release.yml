@@ -174,7 +174,7 @@ jobs:
         echo "amd64 sha256: ${amd_sha}" 
         echo "version: ${version}"
 
-        bash -x ./update_formula.sh $version $arm_sha $amd_sha
+        bash ./update_formula.sh $version $arm_sha $amd_sha
         ls -al Formula/
         cat Formula/${{ matrix.product }}.rb
 
