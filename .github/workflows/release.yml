@@ -157,6 +157,7 @@ jobs:
         version: 'tags/${{ env.REF }}'
         regex: true
         file: "${{ env.ASSET }}-.*\\.sha256"
+        target: "./"
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: List files
