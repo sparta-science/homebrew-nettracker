@@ -166,8 +166,14 @@ jobs:
 
     - name: Update formula file
       run: |
-        echo "ARM_SHA256=$(cat ${{ env.ASSET_NAME }}-arm64.sha256)" >> $GITHUB_ENV
-        echo "AMD_SHA256=$(cat ${{ env.ASSET_NAME }}-amd64.sha256)" >> $GITHUB_ENV
+        cat ./${{ env.ASSET_NAME }}-arm64.sha256
+        arm_sha=$(cat ./${{ env.ASSET_NAME }}-arm64.sha256)
+
+        cat ${{ env.ASSET_NAME }}-amd64.sha256
+        amd_sha=$(cat ./${{ env.ASSET_NAME }}-amd64.sha256)
+
+        echo "ARM_SHA256=${arm_sha}" >> $GITHUB_ENV
+        echo "AMD_SHA256=${amd_sha}" >> $GITHUB_ENV
         version=$(echo ${{ env.REF }} | sed 's/v//g')
 
         echo "arm64 sha256: ${ARM_SHA256}"
